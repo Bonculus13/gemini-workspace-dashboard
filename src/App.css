@@ -28,42 +28,112 @@ body {
   --font-family: 'Courier New', monospace;
 }
 
+/* Blueprint Mode (Architectural/Schematic) */
+[data-theme='blueprint'] {
+  --bg-primary: #003366;
+  --bg-secondary: #002244;
+  --text-primary: #ffffff;
+  --text-secondary: #aaccff;
+  --accent: #ffffff;
+  --border: rgba(255, 255, 255, 0.2);
+  --font-family: 'Segoe UI', Tahoma, sans-serif;
+  background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Modern Mode (SaaS/Management) */
+[data-theme='modern'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent: #3b82f6;
+  --border: #e2e8f0;
+  --font-family: 'Inter', system-ui, sans-serif;
+}
+
 .dashboard-container {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 260px 1fr;
   height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-}
-
-.sidebar h2 {
-  font-size: 14px;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-}
-
-.nav-item {
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background 0.1s;
-}
-
-.nav-item:hover {
-  background: var(--border);
+  gap: 16px;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.05);
 }
 
 .main-content {
-  padding: 40px;
+  padding: 32px;
   overflow-y: auto;
+  position: relative;
+}
+
+.resource-monitor {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label { font-size: 11px; text-transform: uppercase; color: var(--text-secondary); }
+.metric-value { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+.command-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 284px;
+  right: 24px;
+  display: flex;
+  gap: 12px;
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+/* Logic Graph Placeholder */
+.logic-graph {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 300px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.02);
+}
+
+.node {
+  padding: 12px 20px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  text-align: center;
 }
 
 .controls {

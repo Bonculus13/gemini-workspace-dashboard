@@ -1,67 +1,123 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+type Theme = 'wiki' | 'command' | 'blueprint' | 'modern';
+type Depth = 'summary' | 'inventory' | 'live' | 'atomic';
+
 const App = () => {
-  const [theme, setTheme] = useState<'wiki' | 'command'>('wiki');
-  const [viewDepth, setViewDepth] = useState<'summary' | 'live'>('summary');
+  const [theme, setTheme] = useState<Theme>('wiki');
+  const [depth, setDepth] = useState<Depth>('summary');
   const [logs, setLogs] = useState<string[]>([]);
+  const [metrics, setMetrics] = useState({ tokens: 42500, cost: 0.12, context: 15 });
 
   useEffect(() => {
-    // Mocking the "Live Microscope" stream
-    if (viewDepth === 'live') {
-      const mockStream = [
-        '[2026-02-28 15:45:12] CALL: run_shell_command("mkdir dashboard")',
-        '[2026-02-28 15:45:14] STDOUT: Success.',
-        '[2026-02-28 15:45:15] CALL: save_memory("Dashboard Preference: Vanilla CSS")',
-        '[2026-02-28 15:45:16] MEMORY_WRITE: Committed to Shared Memory.',
-        '[2026-02-28 15:45:20] PHASE: Building UI Architecture...'
-      ];
-      setLogs(mockStream);
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch('/streams/session.log');
+        const text = await response.text();
+        setLogs(text.split('\n').filter(l => l.trim()));
+      } catch (err) {
+        console.error("Microscope Error: ", err);
+      }
+    };
+
+    if (depth === 'live' || depth === 'atomic') {
+      fetchLogs();
+      const interval = setInterval(fetchLogs, 2000);
+      return () => clearInterval(interval);
     }
-  }, [viewDepth]);
+  }, [depth]);
+
+  const themes: Theme[] = ['wiki', 'command', 'blueprint', 'modern'];
+  const depths: Depth[] = ['summary', 'inventory', 'live', 'atomic'];
 
   return (
     <div className="dashboard-container" data-theme={theme}>
       <div className="sidebar">
-        <h2>Workspace</h2>
-        <div className="nav-item">🏛️ Architecture</div>
-        <div className="nav-item">📁 Inventory</div>
-        <div className="nav-item">🤖 Agents</div>
-        <div className="nav-item">🕒 History</div>
+        <h2>Mission Control</h2>
+        {depths.map(d => (
+          <div 
+            key={d} 
+            className={`nav-item ${depth === d ? 'active' : ''}`}
+            onClick={() => setDepth(d)}
+          >
+            {d.toUpperCase()}
+          </div>
+        ))}
+        
+        <div style={{marginTop: 'auto'}}>
+          <h2>Aesthetic</h2>
+          <select value={theme} onChange={(e) => setTheme(e.target.value as Theme)}>
+            {themes.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+          </select>
+        </div>
       </div>
 
       <div className="main-content">
-        <div className="controls">
-          <button onClick={() => setTheme(theme === 'wiki' ? 'command' : 'wiki')}>
-            MODE: {theme.toUpperCase()}
-          </button>
-          <button onClick={() => setViewDepth(viewDepth === 'summary' ? 'live' : 'summary')}>
-            DEPTH: {viewDepth.toUpperCase()}
-          </button>
+        <div className="resource-monitor">
+          <div className="metric">
+            <span className="metric-label">Tokens Used</span>
+            <span className="metric-value">{metrics.tokens.toLocaleString()}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">Context Load</span>
+            <span className="metric-value">{metrics.context}%</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">Session Cost</span>
+            <span className="metric-value">${metrics.cost.toFixed(2)}</span>
+          </div>
         </div>
 
-        {viewDepth === 'summary' ? (
-          <div className="wiki-view">
-            <h1>Gemini Workspace Architecture</h1>
-            <p>Welcome to the Omniscient Mission Control. You are viewing the high-level summary of your environment.</p>
-            <h3>Operational Status</h3>
+        {depth === 'summary' && (
+          <div className="view-layer">
+            <h1>Executive Summary</h1>
+            <p>Status: <span style={{color: 'var(--accent)'}}>Operational</span></p>
+            <div className="card-grid">
+              <div className="node">Current Mission: Dashboard Expansion</div>
+              <div className="node">Active Agent: Controller</div>
+            </div>
+          </div>
+        )}
+
+        {depth === 'inventory' && (
+          <div className="view-layer">
+            <h1>Logic Graph (Inventory)</h1>
+            <div className="logic-graph">
+              <div className="node">CONTROLLER<br/><small>Root</small></div>
+              <div className="node">DOC-AGENT<br/><small>Sync Engine</small></div>
+              <div className="node">DASHBOARD<br/><small>UI Layer</small></div>
+            </div>
+            <h3>File Integrity</h3>
             <ul>
-              <li><strong>Controller Agent:</strong> Active</li>
-              <li><strong>Sync-Bot:</strong> Running</li>
-              <li><strong>Security Layer:</strong> Verified</li>
+              <li>ARCHITECTURE.md [Verified]</li>
+              <li>MANIFEST.md [Verified]</li>
             </ul>
           </div>
-        ) : (
-          <div className="live-view">
-            <h1>The Microscope (Live Stream)</h1>
+        )}
+
+        {(depth === 'live' || depth === 'atomic') && (
+          <div className="view-layer">
+            <h1>{depth === 'live' ? 'Microscope (Live Stream)' : 'Quantum Trace (Atomic)'}</h1>
             <div className="terminal-view">
               {logs.map((log, i) => (
-                <div key={i} className="log-entry">{log}</div>
+                <div key={i} className="log-entry">
+                  {depth === 'atomic' ? JSON.stringify({log, traceId: i, level: 'DEBUG'}) : log}
+                </div>
               ))}
               <div className="cursor">_</div>
             </div>
           </div>
         )}
+
+        <div className="command-bar">
+          <span className="accent-text">&gt;</span>
+          <input 
+            className="command-input" 
+            placeholder="Issue a command to the Controller..." 
+            onKeyDown={(e) => e.key === 'Enter' && alert('Command Received: ' + (e.target as HTMLInputElement).value)}
+          />
+        </div>
       </div>
     </div>
   );
