@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-type Theme = 'wiki' | 'command' | 'blueprint' | 'modern';
+type Theme = 'wiki' | 'command' | 'blueprint' | 'modern' | 'synthwave' | 'retro' | 'specular';
 type Depth = 'summary' | 'inventory' | 'live' | 'atomic' | 'economics' | 'comms';
 type FocusMode = 'idle' | 'debugging' | 'documentation' | 'building' | 'optimizing' | 'triage';
 
@@ -87,12 +87,13 @@ const App = () => {
     return () => clearInterval(interval);
   }, [depth]);
 
-  const themes: Theme[] = ['wiki', 'command', 'blueprint', 'modern'];
+  const themes: Theme[] = ['wiki', 'command', 'blueprint', 'modern', 'synthwave', 'retro', 'specular'];
   const depths: Depth[] = ['summary', 'inventory', 'live', 'atomic', 'economics', 'comms'];
 
   // Predictive Grid Classes
   const getBentoClass = (defaultSpan: string, focusExpand: FocusMode) => {
-    if (theme !== 'modern') return '';
+    const isModern = ['modern', 'synthwave', 'retro', 'specular'].includes(theme);
+    if (!isModern) return '';
     return `bento-card ${systemState.focus === focusExpand ? 'span-12 row-span-2' : defaultSpan}`;
   };
 

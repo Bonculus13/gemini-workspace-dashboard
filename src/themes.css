@@ -1,0 +1,60 @@
+/* Advanced Theme Pack - Layered Token System 2026 */
+
+/* Synthwave: High-Energy Neon */
+[data-theme='synthwave'] {
+  --bg-primary: #170728;
+  --bg-secondary: rgba(59, 20, 106, 0.7);
+  --text-primary: #ffe8ff;
+  --text-secondary: #f2a8ff;
+  --accent: #ff2fa9;
+  --accent-light: #22f0ff;
+  --glass-bg: rgba(23, 7, 40, 0.8);
+  --glass-border: rgba(255, 47, 169, 0.3);
+  --font-family: 'Century Gothic', sans-serif;
+  background: radial-gradient(circle at 20% 10%, #3b146a, #170728 50%);
+  background-attachment: fixed;
+}
+
+/* Retro Terminal: Matrix Contrast */
+[data-theme='retro'] {
+  --bg-primary: #06120a;
+  --bg-secondary: rgba(11, 33, 20, 0.8);
+  --text-primary: #a0ff9d;
+  --text-secondary: #7fd47a;
+  --accent: #4eff5a;
+  --accent-light: #b0ff69;
+  --glass-bg: rgba(6, 18, 10, 0.9);
+  --glass-border: rgba(78, 255, 90, 0.2);
+  --font-family: 'Consolas', monospace;
+  background: linear-gradient(#051009, #06120a);
+}
+
+/* Specular Theory: Deep Space Minimal */
+[data-theme='specular'] {
+  --bg-primary: #111827;
+  --bg-secondary: rgba(35, 53, 88, 0.7);
+  --text-primary: #edf3ff;
+  --text-secondary: #b6c5e3;
+  --accent: #7db4ff;
+  --accent-light: #ffc857;
+  --glass-bg: rgba(17, 24, 39, 0.85);
+  --glass-border: rgba(125, 180, 255, 0.2);
+  --font-family: 'Inter', sans-serif;
+  background: conic-gradient(from 40deg at 22% 8%, #233558, #111827, #1c2f4f, #111827);
+  background-attachment: fixed;
+}
+
+/* Common Bento Styling for All Themes */
+[data-theme='synthwave'] .bento-card,
+[data-theme='retro'] .bento-card,
+[data-theme='specular'] .bento-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='retro'] .terminal-view {
+  border: 1px dashed var(--accent);
+  box-shadow: none;
+}
