@@ -70,29 +70,55 @@ const App = () => {
         </div>
 
         {depth === 'summary' && (
-          <div className="view-layer">
-            <h1>Executive Summary</h1>
-            <p>Status: <span style={{color: 'var(--accent)'}}>Operational</span></p>
-            <div className="card-grid">
-              <div className="node">Current Mission: Dashboard Expansion</div>
-              <div className="node">Active Agent: Controller</div>
+          <div className={`view-layer ${theme === 'modern' ? 'bento-grid' : ''}`}>
+            {theme !== 'modern' && <h1>Executive Summary</h1>}
+            
+            <div className={`bento-card ${theme === 'modern' ? 'span-8 row-span-2' : ''}`}>
+              <h2 style={{marginTop: 0}}>Current Mission: Dashboard Expansion</h2>
+              <p>Status: <span style={{color: 'var(--accent)'}}>Operational</span></p>
+              <p style={{color: 'var(--text-secondary)'}}>Building the 2026 Spatial Bento interface. Context Engine is active.</p>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-4' : ''}`}>
+              <h3 style={{marginTop: 0}}>Active Agent</h3>
+              <div style={{fontSize: '24px', fontWeight: 'bold', color: 'var(--accent)'}}>Controller</div>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-4' : ''}`}>
+              <h3 style={{marginTop: 0}}>Next Action</h3>
+              <p style={{fontSize: '14px'}}>Awaiting user directive for next phase implementation.</p>
             </div>
           </div>
         )}
 
         {depth === 'inventory' && (
-          <div className="view-layer">
-            <h1>Logic Graph (Inventory)</h1>
-            <div className="logic-graph">
-              <div className="node">CONTROLLER<br/><small>Root</small></div>
-              <div className="node">DOC-AGENT<br/><small>Sync Engine</small></div>
-              <div className="node">DASHBOARD<br/><small>UI Layer</small></div>
+          <div className={`view-layer ${theme === 'modern' ? 'bento-grid' : ''}`}>
+            {theme !== 'modern' && <h1>Logic Graph (Inventory)</h1>}
+            
+            <div className={`bento-card ${theme === 'modern' ? 'span-12' : ''}`}>
+              <h3 style={{marginTop: 0}}>Node Topology</h3>
+              <div className="logic-graph">
+                <div className="node">CONTROLLER<br/><small>Root</small></div>
+                <div className="node">DOC-AGENT<br/><small>Sync Engine</small></div>
+                <div className="node">DASHBOARD<br/><small>UI Layer</small></div>
+              </div>
             </div>
-            <h3>File Integrity</h3>
-            <ul>
-              <li>ARCHITECTURE.md [Verified]</li>
-              <li>MANIFEST.md [Verified]</li>
-            </ul>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-6' : ''}`}>
+              <h3 style={{marginTop: 0}}>File Integrity</h3>
+              <ul style={{listStyle: 'none', padding: 0}}>
+                <li style={{padding: '8px 0', borderBottom: '1px solid var(--border)'}}>🟢 ARCHITECTURE.md</li>
+                <li style={{padding: '8px 0'}}>🟢 MANIFEST.md</li>
+              </ul>
+            </div>
+            
+            <div className={`bento-card ${theme === 'modern' ? 'span-6' : ''}`}>
+              <h3 style={{marginTop: 0}}>Memory Clusters</h3>
+              <ul style={{listStyle: 'none', padding: 0}}>
+                <li style={{padding: '8px 0', borderBottom: '1px solid var(--border)'}}>🧠 Token Efficiency Rules</li>
+                <li style={{padding: '8px 0'}}>🧠 UI Theme Preferences</li>
+              </ul>
+            </div>
           </div>
         )}
 
