@@ -26,6 +26,14 @@ interface SystemState {
   active_agents: AgentState[];
 }
 
+interface Decision {
+  id: string;
+  type: string;
+  title: string;
+  context: string;
+  options: { id: string, label: string, impact: string }[];
+}
+
 const App = () => {
   const [theme, setTheme] = useState<Theme>('modern'); // Default to modern/spatial
   const [depth, setDepth] = useState<Depth>('summary');
@@ -39,6 +47,8 @@ const App = () => {
   });
   const [pulse, setPulse] = useState({ cpu: 0, ram: 0, temp: 0 });
   const [templates, setTemplates] = useState<Record<string, string>>({});
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [customInput, setCustomInput] = useState<Record<string, string>>({});
 
   // The Context Engine, Log Streamer, and OS Pulse
   useEffect(() => {
@@ -51,6 +61,10 @@ const App = () => {
         // Fetch Templates
         const tempRes = await fetch('http://localhost:3001/api/templates');
         if (tempRes.ok) setTemplates(await tempRes.json());
+
+        // Fetch Decisions (HIP)
+        const decRes = await fetch('http://localhost:3001/api/decisions');
+        if (decRes.ok) setDecisions(await decRes.json());
 
         // Fetch Logs based on selected agent
         const logRes = await fetch(`/streams/${selectedAgent}.log`);
@@ -131,6 +145,16 @@ const App = () => {
       console.error("Sidecar Error: ", e);
       alert("Sidecar Bridge not active. Make sure sidecar.js is running.");
     }
+  };
+
+  const handleDecision = async (id: string, choiceId?: string) => {
+    const payload = choiceId ? { choice: choiceId } : { custom_instruction: customInput[id] };
+    await fetch(`http://localhost:3001/api/decisions/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    setDecisions(d => d.filter(x => x.id !== id));
   };
 
   return (
@@ -292,39 +316,59 @@ const App = () => {
 
         {depth === 'comms' && (
           <div className={`view-layer ${theme === 'modern' ? 'bento-grid' : ''}`}>
-            {theme !== 'modern' && <h1>Comms & Intake</h1>}
+            {theme !== 'modern' && <h1>Human Interaction Panel (HIP)</h1>}
             
-            <div className={getBentoClass('span-8 row-span-3', 'triage')}>
-              <h3 style={{marginTop: 0}}>Controller Chat</h3>
-              <div className="terminal-view" style={{height: '400px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)'}}>
-                <div className="log-entry"><span style={{color: 'var(--accent)'}}>[System]</span> Controller Agent online.</div>
-                <div className="log-entry"><span style={{color: 'var(--text-secondary)'}}>[User]</span> Let's start building the authentication feature.</div>
-                <div className="log-entry"><span style={{color: 'var(--accent)'}}>[Controller]</span> Acknowledged. Branching 'feature/auth'. Spawning Dev-Agent...</div>
-              </div>
-            </div>
-
-            <div className={`bento-card ${theme === 'modern' ? 'span-4 row-span-2' : ''}`}>
-              <h3 style={{marginTop: 0}}>Intake Dropzone</h3>
-              <div style={{
-                border: '2px dashed var(--border)', 
-                borderRadius: '12px', 
-                padding: '40px 20px', 
-                textAlign: 'center',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer'
-              }}>
-                <div style={{fontSize: '32px', marginBottom: '10px'}}>📥</div>
-                Drop files here for Triage<br/>
-                <small>(or save to C:\Users\local-admin\Downloads\_intake)</small>
-              </div>
+            <div className={getBentoClass('span-8 row-span-3', 'triage')} style={{overflowY: 'auto'}}>
+              <h3 style={{marginTop: 0, borderBottom: '1px solid var(--border)', paddingBottom: '10px'}}>Pending Decisions ({decisions.length})</h3>
+              
+              {decisions.map(d => (
+                <div key={d.id} style={{background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border)'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                    <strong style={{color: 'var(--accent)'}}>{d.title}</strong>
+                    <span className="badge" style={{fontSize: '10px'}}>{d.type.toUpperCase()}</span>
+                  </div>
+                  <p style={{fontSize: '13px', color: 'var(--text-secondary)'}}>{d.context}</p>
+                  
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px'}}>
+                    {d.options.map(opt => (
+                      <button key={opt.id} onClick={() => handleDecision(d.id, opt.id)} style={{textAlign: 'left', display: 'flex', justifyContent: 'space-between', padding: '10px'}}>
+                        <span>{opt.id}. {opt.label}</span>
+                        <span style={{color: 'var(--text-secondary)', fontSize: '11px'}}>{opt.impact}</span>
+                      </button>
+                    ))}
+                    <div style={{display: 'flex', gap: '8px', marginTop: '8px'}}>
+                      <input 
+                        style={{flex: 1}} 
+                        placeholder="Or type a custom approach..." 
+                        value={customInput[d.id] || ''}
+                        onChange={e => setCustomInput({...customInput, [d.id]: e.target.value})}
+                      />
+                      <button onClick={() => handleDecision(d.id)} style={{background: 'transparent', border: '1px dashed var(--accent)'}}>EXECUTE</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {decisions.length === 0 && <p style={{color: 'var(--text-secondary)', textAlign: 'center', marginTop: '40px'}}>Hive is currently autonomous. No human input required.</p>}
             </div>
 
             <div className={`bento-card ${theme === 'modern' ? 'span-4' : ''}`}>
-              <h3 style={{marginTop: 0}}>Active Branches (Git-Flow)</h3>
-              <ul style={{listStyle: 'none', padding: 0, fontSize: '14px'}}>
-                <li style={{padding: '4px 0'}}>🌿 master <span style={{float: 'right', color: 'var(--text-secondary)'}}>idle</span></li>
-                <li style={{padding: '4px 0'}}>🌿 feature/dashboard-ui <span style={{float: 'right', color: 'var(--accent)'}}>dev-agent</span></li>
-              </ul>
+              <h3 style={{marginTop: 0}}>Session Protocol</h3>
+              <button 
+                style={{width: '100%', padding: '14px', background: 'linear-gradient(120deg, #c0392b, #8e44ad)', fontSize: '14px', fontWeight: 'bold'}}
+                onClick={() => setCommandInput('/deploy controller "EXECUTE SESSION CLOSEOUT: Stash all work, generate manifest, and commit."')}
+              >
+                ⏸ HIBERNATE / CLOSEOUT
+              </button>
+              <p style={{fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', textAlign: 'center'}}>
+                Safely stashes active branches and creates a save state.
+              </p>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-4' : ''}`}>
+              <h3 style={{marginTop: 0}}>Controller Chat</h3>
+              <div className="terminal-view" style={{height: '200px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)'}}>
+                <div className="log-entry"><span style={{color: 'var(--accent)'}}>[System]</span> Awaiting Commander directive.</div>
+              </div>
             </div>
           </div>
         )}

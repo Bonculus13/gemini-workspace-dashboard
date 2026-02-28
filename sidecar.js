@@ -95,6 +95,43 @@ const MISSION_TEMPLATES = {
 
 app.get('/api/templates', (req, res) => res.json(MISSION_TEMPLATES));
 
+// MISSION 4: Human Interaction Panel (Decision Queue)
+app.get('/api/decisions', (req, res) => {
+  const qPath = path.join(WORKSPACE_ROOT, '.gemini/logs/decisions/queue.json');
+  if (fs.existsSync(qPath)) {
+    const queue = JSON.parse(fs.readFileSync(qPath, 'utf8'));
+    res.json(queue.filter(q => q.status === 'pending'));
+  } else {
+    res.json([]);
+  }
+});
+
+app.post('/api/decisions/:id', (req, res) => {
+  const { id } = req.params;
+  const { choice, custom_instruction } = req.body;
+  const qPath = path.join(WORKSPACE_ROOT, '.gemini/logs/decisions/queue.json');
+  
+  if (fs.existsSync(qPath)) {
+    let queue = JSON.parse(fs.readFileSync(qPath, 'utf8'));
+    const item = queue.find(q => q.id === id);
+    if (item) {
+      item.status = 'resolved';
+      item.resolution = choice || custom_instruction;
+      fs.writeFileSync(qPath, JSON.stringify(queue, null, 2));
+      
+      // Spawn Controller to execute the decision
+      const instruction = custom_instruction ? `Follow custom instruction: ${custom_instruction}` : `Execute option: ${choice}`;
+      exec(`powershell.exe -NoProfile -Command "& '${LOG_STREAMER}' -Agent 'controller' -Message 'HIP_DECISION [${item.title}]: ${instruction}. Deploying agent...'"`);
+      
+      const geminiCmd = `gemini --agent dev-agent "Implement decision for ${item.title}: ${instruction}"`;
+      exec(geminiCmd, { cwd: WORKSPACE_ROOT });
+    }
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Queue not found' });
+  }
+});
+
 // Run optimizer every 1 minute
 setInterval(autoTrimContext, 60000);
   const intakeDir = 'C:/Users/local-admin/Downloads/_intake';
