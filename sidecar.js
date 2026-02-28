@@ -40,8 +40,63 @@ app.post('/api/execute', (req, res) => {
   res.json({ success: true, pid: child.pid });
 });
 
-// Auto-Triage Watcher (Zero Token Logic)
-const triageFiles = () => {
+const si = require('systeminformation');
+
+// MISSION 1: Auto-Context Trimming (Financial Optimizer)
+const autoTrimContext = () => {
+  const tokenLogPath = path.join(WORKSPACE_ROOT, '.gemini/logs/telemetry/token-usage.jsonl');
+  const ignorePath = path.join(WORKSPACE_ROOT, '.geminiignore');
+  
+  if (!fs.existsSync(tokenLogPath)) return;
+
+  const data = fs.readFileSync(tokenLogPath, 'utf8').split('\n').filter(Boolean);
+  const counts = {};
+  
+  data.slice(-50).forEach(line => {
+    const entry = JSON.parse(line);
+    const match = entry.action.match(/\(([^)]+)\)/);
+    if (match) {
+      const file = match[1];
+      counts[file] = (counts[file] || 0) + entry.tokens_used;
+    }
+  });
+
+  for (const file in counts) {
+    if (counts[file] > 100000) { // Threshold: 100k tokens in last 50 turns
+      const currentIgnore = fs.existsSync(ignorePath) ? fs.readFileSync(ignorePath, 'utf8') : '';
+      if (!currentIgnore.includes(file)) {
+        fs.appendFileSync(ignorePath, `\n${file} # Auto-trimmed for efficiency`);
+        exec(`powershell.exe -NoProfile -Command "& '${LOG_STREAMER}' -Agent 'system' -Message 'OPTIMIZER: Auto-trimmed ${file} to save tokens.'"`);
+      }
+    }
+  }
+};
+
+// MISSION 3: Deep Pulse (OS Telemetry)
+app.get('/api/pulse', async (req, res) => {
+  try {
+    const cpu = await si.currentLoad();
+    const mem = await si.mem();
+    res.json({
+      cpu: Math.round(cpu.currentLoad),
+      ram: Math.round((mem.active / mem.total) * 100),
+      temp: 42 // Mocking temp as it requires elevation often
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// MISSION 2: Template Registry
+const MISSION_TEMPLATES = {
+  'ui-fix': 'Verify contrast and layout performance in App.css and App.tsx. Propose immediate fixes.',
+  'security-audit': 'Run a full security scan of the current branch and report vulnerabilities.',
+  'doc-sync': 'Force a delta-sync of all architecture and manifest files.',
+  'clean-bloat': 'Analyze workspace for large binary files and move to quarantine.'
+};
+
+app.get('/api/templates', (req, res) => res.json(MISSION_TEMPLATES));
+
+// Run optimizer every 1 minute
+setInterval(autoTrimContext, 60000);
   const intakeDir = 'C:/Users/local-admin/Downloads/_intake';
   if (!fs.existsSync(intakeDir)) return;
 

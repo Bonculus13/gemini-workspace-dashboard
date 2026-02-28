@@ -37,11 +37,21 @@ const App = () => {
   const [systemState, setSystemState] = useState<SystemState>({
     focus: 'idle', active_mission: 'Loading...', system_health: '100%', active_agents: []
   });
+  const [pulse, setPulse] = useState({ cpu: 0, ram: 0, temp: 0 });
+  const [templates, setTemplates] = useState<Record<string, string>>({});
 
-  // The Context Engine & Log Streamer
+  // The Context Engine, Log Streamer, and OS Pulse
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch OS Pulse
+        const pulseRes = await fetch('http://localhost:3001/api/pulse');
+        if (pulseRes.ok) setPulse(await pulseRes.json());
+
+        // Fetch Templates
+        const tempRes = await fetch('http://localhost:3001/api/templates');
+        if (tempRes.ok) setTemplates(await tempRes.json());
+
         // Fetch Logs based on selected agent
         const logRes = await fetch(`/streams/${selectedAgent}.log`);
         if (logRes.ok) {
@@ -151,16 +161,16 @@ const App = () => {
       <div className="main-content">
         <div className="resource-monitor">
           <div className="metric">
+            <span className="metric-label">CPU LOAD</span>
+            <span className="metric-value">{pulse.cpu}%</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">RAM USAGE</span>
+            <span className="metric-value">{pulse.ram}%</span>
+          </div>
+          <div className="metric">
             <span className="metric-label">Tokens Used</span>
             <span className="metric-value">{metrics.tokens.toLocaleString()}</span>
-          </div>
-          <div className="metric">
-            <span className="metric-label">Context Load</span>
-            <span className="metric-value">{metrics.context}%</span>
-          </div>
-          <div className="metric">
-            <span className="metric-label">Active Agents</span>
-            <span className="metric-value">{systemState.active_agents.length}</span>
           </div>
         </div>
 
@@ -177,15 +187,20 @@ const App = () => {
             </div>
 
             <div className={getBentoClass('span-4', 'idle')}>
-              <h3 style={{marginTop: 0}}>Agent Fleet</h3>
-              <ul style={{listStyle: 'none', padding: 0}}>
-                {systemState.active_agents.map(a => (
-                  <li key={a.name} style={{padding: '4px 0'}}>
-                    <span style={{color: 'var(--accent)'}}>●</span> {a.name} 
-                    <small style={{display: 'block', color: 'var(--text-secondary)'}}>PID: {a.pid} | {a.status}</small>
-                  </li>
+              <h3 style={{marginTop: 0}}>Quick Missions</h3>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                {Object.keys(templates).map(t => (
+                  <button 
+                    key={t} 
+                    style={{fontSize: '11px', textAlign: 'left', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)'}}
+                    onClick={() => {
+                      setCommandInput(`/deploy dev-agent ${templates[t]}`);
+                    }}
+                  >
+                    ⚡ {t.toUpperCase()}
+                  </button>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         )}
