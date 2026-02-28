@@ -3,6 +3,7 @@ const cors = require('cors');
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const si = require('systeminformation');
 
 const app = express();
 app.use(cors());
@@ -40,8 +41,6 @@ app.post('/api/execute', (req, res) => {
   res.json({ success: true, pid: child.pid });
 });
 
-const si = require('systeminformation');
-
 // MISSION 1: Auto-Context Trimming (Financial Optimizer)
 const autoTrimContext = () => {
   const tokenLogPath = path.join(WORKSPACE_ROOT, '.gemini/logs/telemetry/token-usage.jsonl');
@@ -53,12 +52,14 @@ const autoTrimContext = () => {
   const counts = {};
   
   data.slice(-50).forEach(line => {
-    const entry = JSON.parse(line);
-    const match = entry.action.match(/\(([^)]+)\)/);
-    if (match) {
-      const file = match[1];
-      counts[file] = (counts[file] || 0) + entry.tokens_used;
-    }
+    try {
+      const entry = JSON.parse(line);
+      const match = entry.action.match(/\(([^)]+)\)/);
+      if (match) {
+        const file = match[1];
+        counts[file] = (counts[file] || 0) + entry.tokens_used;
+      }
+    } catch (e) {}
   });
 
   for (const file in counts) {
@@ -132,8 +133,8 @@ app.post('/api/decisions/:id', (req, res) => {
   }
 });
 
-// Run optimizer every 1 minute
-setInterval(autoTrimContext, 60000);
+// Auto-Triage Watcher (Zero Token Logic)
+const triageFiles = () => {
   const intakeDir = 'C:/Users/local-admin/Downloads/_intake';
   if (!fs.existsSync(intakeDir)) return;
 
@@ -154,6 +155,9 @@ setInterval(autoTrimContext, 60000);
     }
   });
 };
+
+setInterval(triageFiles, 5000);
+setInterval(autoTrimContext, 60000);
 
 app.listen(3001, () => {
   console.log('Sidecar Bridge active on http://localhost:3001');
