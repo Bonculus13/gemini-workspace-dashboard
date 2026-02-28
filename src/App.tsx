@@ -30,6 +30,7 @@ const App = () => {
   const [theme, setTheme] = useState<Theme>('modern'); // Default to modern/spatial
   const [depth, setDepth] = useState<Depth>('summary');
   const [logs, setLogs] = useState<string[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<string>('session');
   const [tokenLogs, setTokenLogs] = useState<TokenMetric[]>([]);
   const [metrics, setMetrics] = useState({ tokens: 42500, cost: 0.12, context: 15 });
   const [systemState, setSystemState] = useState<SystemState>({
@@ -40,10 +41,12 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Logs
-        const logRes = await fetch('/streams/session.log');
-        const text = await logRes.text();
-        setLogs(text.split('\n').filter(l => l.trim()));
+        // Fetch Logs based on selected agent
+        const logRes = await fetch(`/streams/${selectedAgent}.log`);
+        if (logRes.ok) {
+          const text = await logRes.text();
+          setLogs(text.split('\n').filter(l => l.trim()));
+        }
 
         // Fetch System State (The Predictive Engine)
         const stateRes = await fetch('/state.json');
@@ -286,8 +289,18 @@ const App = () => {
         {(depth === 'live' || depth === 'atomic') && (
           <div className={`view-layer ${theme === 'modern' ? 'bento-grid' : ''}`}>
             <div className={getBentoClass('span-12 row-span-3', 'debugging')}>
-              <h3 style={{marginTop: 0, display: 'flex', justifyContent: 'space-between'}}>
-                {depth === 'live' ? 'Live Terminal (Microscope)' : 'Quantum Trace'}
+              <h3 style={{marginTop: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                  {depth === 'live' ? 'Live Microscope' : 'Quantum Trace'}
+                  <select 
+                    style={{fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(0,0,0,0.5)', color: 'inherit', border: '1px solid var(--border)'}}
+                    value={selectedAgent} 
+                    onChange={(e) => setSelectedAgent(e.target.value)}
+                  >
+                    <option value="session">Global Session</option>
+                    {systemState.active_agents.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+                  </select>
+                </div>
                 <span className="blinking-cursor" style={{color: 'var(--accent)'}}>REC</span>
               </h3>
               <div className="terminal-view">
