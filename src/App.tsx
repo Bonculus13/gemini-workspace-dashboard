@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 type Theme = 'wiki' | 'command' | 'blueprint' | 'modern';
-type Depth = 'summary' | 'inventory' | 'live' | 'atomic' | 'economics';
-type FocusMode = 'idle' | 'debugging' | 'documentation' | 'building' | 'optimizing';
+type Depth = 'summary' | 'inventory' | 'live' | 'atomic' | 'economics' | 'comms';
+type FocusMode = 'idle' | 'debugging' | 'documentation' | 'building' | 'optimizing' | 'triage';
 
 interface TokenMetric {
   timestamp: string;
@@ -84,7 +84,7 @@ const App = () => {
   }, [depth]);
 
   const themes: Theme[] = ['wiki', 'command', 'blueprint', 'modern'];
-  const depths: Depth[] = ['summary', 'inventory', 'live', 'atomic', 'economics'];
+  const depths: Depth[] = ['summary', 'inventory', 'live', 'atomic', 'economics', 'comms'];
 
   // Predictive Grid Classes
   const getBentoClass = (defaultSpan: string, focusExpand: FocusMode) => {
@@ -239,6 +239,45 @@ const App = () => {
                 <li>
                   <strong>🛡️ Masking Optimization:</strong> Current threshold is safe. Consider reducing to 30k tokens for "idle" tasks.
                 </li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {depth === 'comms' && (
+          <div className={`view-layer ${theme === 'modern' ? 'bento-grid' : ''}`}>
+            {theme !== 'modern' && <h1>Comms & Intake</h1>}
+            
+            <div className={getBentoClass('span-8 row-span-3', 'triage')}>
+              <h3 style={{marginTop: 0}}>Controller Chat</h3>
+              <div className="terminal-view" style={{height: '400px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)'}}>
+                <div className="log-entry"><span style={{color: 'var(--accent)'}}>[System]</span> Controller Agent online.</div>
+                <div className="log-entry"><span style={{color: 'var(--text-secondary)'}}>[User]</span> Let's start building the authentication feature.</div>
+                <div className="log-entry"><span style={{color: 'var(--accent)'}}>[Controller]</span> Acknowledged. Branching 'feature/auth'. Spawning Dev-Agent...</div>
+              </div>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-4 row-span-2' : ''}`}>
+              <h3 style={{marginTop: 0}}>Intake Dropzone</h3>
+              <div style={{
+                border: '2px dashed var(--border)', 
+                borderRadius: '12px', 
+                padding: '40px 20px', 
+                textAlign: 'center',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer'
+              }}>
+                <div style={{fontSize: '32px', marginBottom: '10px'}}>📥</div>
+                Drop files here for Triage<br/>
+                <small>(or save to C:\Users\local-admin\Downloads\_intake)</small>
+              </div>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-4' : ''}`}>
+              <h3 style={{marginTop: 0}}>Active Branches (Git-Flow)</h3>
+              <ul style={{listStyle: 'none', padding: 0, fontSize: '14px'}}>
+                <li style={{padding: '4px 0'}}>🌿 master <span style={{float: 'right', color: 'var(--text-secondary)'}}>idle</span></li>
+                <li style={{padding: '4px 0'}}>🌿 feature/dashboard-ui <span style={{float: 'right', color: 'var(--accent)'}}>dev-agent</span></li>
               </ul>
             </div>
           </div>
