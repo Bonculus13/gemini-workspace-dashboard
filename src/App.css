@@ -41,54 +41,69 @@ body {
   background-size: 20px 20px;
 }
 
-/* Spatial Mode (2026 Modern/Glassmorphism) */
+/* Spatial 2.0 (2026 High-Contrast Glassmorphism) */
 [data-theme='modern'] {
-  --bg-primary: #0f172a;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent: #38bdf8;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --font-family: 'Inter', system-ui, sans-serif;
+  /* Primitives (Palette) */
+  --ref-slate-900: #0f172a;
+  --ref-slate-800: #1e293b;
+  --ref-slate-700: #334155;
+  --ref-sky-400: #38bdf8;
+  --ref-sky-300: #7dd3fc;
+  --ref-indigo-500: #6366f1;
+  --ref-white: #f8fafc;
+  --ref-gray-400: #94a3b8;
+
+  /* Semantics (Logic) - High Contrast Overrides */
+  --bg-primary: var(--ref-slate-900);
+  --bg-secondary: rgba(30, 41, 59, 0.7); /* Slate 800 with 70% opacity */
+  --text-primary: var(--ref-white); /* Clear white for high contrast */
+  --text-secondary: var(--ref-gray-400);
+  --accent: var(--ref-sky-400);
+  --accent-light: var(--ref-sky-300);
+  --glass-bg: rgba(15, 23, 42, 0.8); /* Deeper background for contrast */
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   
-  /* Dynamic Mesh Gradient Background */
+  /* Dynamic Mesh Gradient (Subtle/Dark) */
   background: 
-    radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%),
-    #0f172a;
+    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.1), transparent 30%),
+    radial-gradient(circle at 90% 90%, rgba(56, 189, 248, 0.1), transparent 30%),
+    var(--ref-slate-900);
   background-attachment: fixed;
 }
 
 [data-theme='modern'] .sidebar {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--ref-slate-900); /* solid background for sidebar contrast */
   border-right: 1px solid var(--glass-border);
 }
 
-[data-theme='modern'] .view-layer {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-auto-rows: minmax(100px, auto);
-  gap: 20px;
-}
-
-/* Bento Box Modularity */
 [data-theme='modern'] .bento-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  border-radius: 24px;
+  border-radius: 20px;
   padding: 24px;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4); /* Stronger shadow for depth */
 }
 
-[data-theme='modern'] .bento-card:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.15);
+/* Ensure headings in modern theme are readable */
+[data-theme='modern'] h1, 
+[data-theme='modern'] h2, 
+[data-theme='modern'] h3 {
+  color: var(--accent-light);
+  letter-spacing: -0.02em;
+}
+
+[data-theme='modern'] .metric-value {
+  color: var(--ref-white);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+[data-theme='modern'] .terminal-view {
+  background: #000; /* Solid black terminal for absolute contrast */
+  color: var(--ref-sky-400);
+  border: 1px solid var(--glass-border);
 }
 
 /* Grid spanning for Bento */

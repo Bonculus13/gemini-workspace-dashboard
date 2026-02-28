@@ -31,6 +31,7 @@ const App = () => {
   const [depth, setDepth] = useState<Depth>('summary');
   const [logs, setLogs] = useState<string[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>('session');
+  const [commandInput, setCommandInput] = useState<string>('');
   const [tokenLogs, setTokenLogs] = useState<TokenMetric[]>([]);
   const [metrics, setMetrics] = useState({ tokens: 42500, cost: 0.12, context: 15 });
   const [systemState, setSystemState] = useState<SystemState>({
@@ -93,6 +94,32 @@ const App = () => {
   const getBentoClass = (defaultSpan: string, focusExpand: FocusMode) => {
     if (theme !== 'modern') return '';
     return `bento-card ${systemState.focus === focusExpand ? 'span-12 row-span-2' : defaultSpan}`;
+  };
+
+  const handleCommand = async () => {
+    if (!commandInput.trim()) return;
+    
+    // Default to the selected agent unless the command starts with /deploy
+    let targetAgent = selectedAgent === 'session' ? 'controller' : selectedAgent;
+    let cmd = commandInput;
+
+    if (commandInput.startsWith('/deploy')) {
+      const parts = commandInput.split(' ');
+      targetAgent = parts[1];
+      cmd = parts.slice(2).join(' ');
+    }
+
+    try {
+      await fetch('http://localhost:3001/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: targetAgent, command: cmd })
+      });
+      setCommandInput('');
+    } catch (e) {
+      console.error("Sidecar Error: ", e);
+      alert("Sidecar Bridge not active. Make sure sidecar.js is running.");
+    }
   };
 
   return (
@@ -319,15 +346,12 @@ const App = () => {
           <span className="accent-text">&gt;</span>
           <input 
             className="command-input" 
-            placeholder="Issue a command to the Controller... (e.g. /deploy evolution-agent)" 
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                const target = e.target as HTMLInputElement;
-                alert('Command Sent to Controller: ' + target.value);
-                target.value = '';
-              }
-            }}
+            placeholder="Issue a command to the Controller... (e.g. /deploy dev-new-01 build feature/auth)" 
+            value={commandInput}
+            onChange={(e) => setCommandInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCommand()}
           />
+          <button onClick={handleCommand} style={{background: 'transparent', border: '1px solid var(--border)', fontSize: '10px'}}>SEND</button>
         </div>
       </div>
     </div>
