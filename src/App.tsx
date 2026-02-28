@@ -2,8 +2,16 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 type Theme = 'wiki' | 'command' | 'blueprint' | 'modern';
-type Depth = 'summary' | 'inventory' | 'live' | 'atomic';
-type FocusMode = 'idle' | 'debugging' | 'documentation' | 'building';
+type Depth = 'summary' | 'inventory' | 'live' | 'atomic' | 'economics';
+type FocusMode = 'idle' | 'debugging' | 'documentation' | 'building' | 'optimizing';
+
+interface TokenMetric {
+  timestamp: string;
+  action: string;
+  tokens_used: number;
+  context_percent: number;
+  cost_estimate: number;
+}
 
 interface AgentState {
   name: string;
@@ -22,6 +30,7 @@ const App = () => {
   const [theme, setTheme] = useState<Theme>('modern'); // Default to modern/spatial
   const [depth, setDepth] = useState<Depth>('summary');
   const [logs, setLogs] = useState<string[]>([]);
+  const [tokenLogs, setTokenLogs] = useState<TokenMetric[]>([]);
   const [metrics, setMetrics] = useState({ tokens: 42500, cost: 0.12, context: 15 });
   const [systemState, setSystemState] = useState<SystemState>({
     focus: 'idle', active_mission: 'Loading...', system_health: '100%', active_agents: []
@@ -41,9 +50,28 @@ const App = () => {
         const stateData: SystemState = await stateRes.json();
         setSystemState(stateData);
         
+        // Fetch Token Usage Telemetry
+        try {
+          const tokenRes = await fetch('/telemetry/token-usage.jsonl');
+          if (tokenRes.ok) {
+            const tokenText = await tokenRes.text();
+            const parsedTokens = tokenText.split('\n')
+              .filter(line => line.trim())
+              .map(line => JSON.parse(line) as TokenMetric);
+            setTokenLogs(parsedTokens);
+            
+            if (parsedTokens.length > 0) {
+              const totalTokens = parsedTokens.reduce((sum, t) => sum + t.tokens_used, 0);
+              const totalCost = parsedTokens.reduce((sum, t) => sum + t.cost_estimate, 0);
+              setMetrics({ tokens: totalTokens, cost: totalCost, context: parsedTokens[parsedTokens.length - 1].context_percent });
+            }
+          }
+        } catch (e) { /* No logs yet */ }
+
         // Predictive Layout Overrides based on Focus
         if (stateData.focus === 'debugging' && depth !== 'live') setDepth('live');
         if (stateData.focus === 'documentation' && depth !== 'inventory') setDepth('inventory');
+        if (stateData.focus === 'optimizing' && depth !== 'economics') setDepth('economics');
 
       } catch (err) {
         console.error("Context Engine Error: ", err);
@@ -56,7 +84,7 @@ const App = () => {
   }, [depth]);
 
   const themes: Theme[] = ['wiki', 'command', 'blueprint', 'modern'];
-  const depths: Depth[] = ['summary', 'inventory', 'live', 'atomic'];
+  const depths: Depth[] = ['summary', 'inventory', 'live', 'atomic', 'economics'];
 
   // Predictive Grid Classes
   const getBentoClass = (defaultSpan: string, focusExpand: FocusMode) => {
@@ -149,6 +177,68 @@ const App = () => {
               <ul style={{listStyle: 'none', padding: 0}}>
                 <li style={{padding: '8px 0', borderBottom: '1px solid var(--border)'}}>🟢 ARCHITECTURE.md</li>
                 <li style={{padding: '8px 0'}}>🟢 MANIFEST.md</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {depth === 'economics' && (
+          <div className={`view-layer ${theme === 'modern' ? 'bento-grid' : ''}`}>
+            {theme !== 'modern' && <h1>Token Economics</h1>}
+            
+            <div className={getBentoClass('span-12', 'optimizing')}>
+              <h3 style={{marginTop: 0}}>Efficiency & Resource Allocation</h3>
+              <div className="resource-monitor" style={{marginBottom: 0, border: 'none', background: 'transparent'}}>
+                 <div className="metric">
+                    <span className="metric-label">Efficiency Score</span>
+                    <span className="metric-value">92%</span>
+                 </div>
+                 <div className="metric">
+                    <span className="metric-label">Tokens Saved (Masking)</span>
+                    <span className="metric-value">1.4M</span>
+                 </div>
+                 <div className="metric">
+                    <span className="metric-label">Est. Monthly Savings</span>
+                    <span className="metric-value">$42.50</span>
+                 </div>
+              </div>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-8' : ''}`}>
+              <h3 style={{marginTop: 0}}>Consumption Breakdown</h3>
+              <div style={{maxHeight: '300px', overflowY: 'auto'}}>
+                <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                  <thead>
+                    <tr style={{textAlign: 'left', color: 'var(--text-secondary)', fontSize: '12px'}}>
+                      <th>Action</th>
+                      <th>Tokens</th>
+                      <th>Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tokenLogs.slice().reverse().map((t, i) => (
+                      <tr key={i} style={{borderBottom: '1px solid var(--border)'}}>
+                        <td style={{padding: '8px 0'}}>{t.action}</td>
+                        <td style={{padding: '8px 0'}}>{t.tokens_used.toLocaleString()}</td>
+                        <td style={{padding: '8px 0'}}>${t.cost_estimate.toFixed(4)}</td>
+                      </tr>
+                    ))}
+                    {tokenLogs.length === 0 && <tr><td colSpan={3}>No telemetry data available.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className={`bento-card ${theme === 'modern' ? 'span-4' : ''}`}>
+              <h3 style={{marginTop: 0}}>Architect Recommendations</h3>
+              <ul style={{listStyle: 'none', padding: 0, fontSize: '14px'}}>
+                <li style={{marginBottom: '12px'}}>
+                  <strong>⚠️ Bloat Detected:</strong> <code>package-lock.json</code> is consuming 12% of total tokens. 
+                  <button style={{display: 'block', marginTop: '4px', fontSize: '10px'}} onClick={() => alert('Adding to .geminiignore...')}>IGNORE FILE</button>
+                </li>
+                <li>
+                  <strong>🛡️ Masking Optimization:</strong> Current threshold is safe. Consider reducing to 30k tokens for "idle" tasks.
+                </li>
               </ul>
             </div>
           </div>
